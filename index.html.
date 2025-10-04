@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Free BD Number Lookup</title>
+  <style>
+    :root{
+      --bg:#0b1015;
+      --card:#0f1720;
+      --accent:#2ecc71;
+      --muted:#9aa6b2;
+      --blue:#6fb8ff;
+      --glass: rgba(255,255,255,0.03);
+      font-family: "Segoe UI", Roboto, "Noto Sans Bengali", sans-serif;
+    }
+    body{
+      margin:0;
+      background: radial-gradient(ellipse at 10% 10%, rgba(15,30,45,0.2), transparent),
+                  linear-gradient(180deg,#061218 0%, #07121a 100%);
+      color:#e6f0ff;
+      min-height:100vh;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:36px 12px;
+    }
+    .container{
+      width:380px;
+      max-width:94%;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:14px;
+      box-shadow: 0 10px 30px rgba(2,6,12,0.7);
+      padding:26px;
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+    h1{
+      font-size:28px;
+      margin:0 0 10px 0;
+      text-align:center;
+      color:var(--blue);
+      text-shadow:0 6px 18px rgba(111,184,255,0.08);
+    }
+    .lookup-row{ display:flex; gap:8px; margin:18px 0 14px; }
+    input[type="text"]{
+      flex:1;
+      background:var(--glass);
+      border:1px solid rgba(255,255,255,0.03);
+      padding:12px 14px;
+      border-radius:8px;
+      color: #eaf6ff;
+      outline:none;
+      font-size:15px;
+    }
+    button.lookup{
+      background: linear-gradient(180deg,var(--accent), #28b463);
+      border:none;
+      padding:0 18px;
+      border-radius:10px;
+      color:#042310;
+      font-weight:600;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .result{
+      margin-top:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+      padding:14px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.02);
+    }
+    .row{ display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.02); }
+    .row:last-child{ border-bottom: none; }
+    .label{ color:var(--muted); display:flex; gap:8px; align-items:center; font-size:14px; }
+    .value{ font-weight:600; color:#eaf6ff; }
+    .buttons{ display:flex; gap:10px; margin-top:14px; }
+    .btn{ flex:1; padding:10px; border-radius:8px; border:none; cursor:pointer; font-weight:600; }
+    .btn.copy{ background:#6e4adf; color:white; }
+    .btn.wh{ background:#2ecc71; color:#02260d; }
+    .small{ font-size:13px; color:var(--muted); margin-top:10px; text-align:center; }
+    .hint{ font-size:13px; color:#9fb0c8; text-align:center; margin-top:8px; }
+    .carrier-badge{ display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border-radius:999px; background:rgba(255,255,255,0.02); font-weight:600; }
+    a.text-link{ color:#a7d8ff; text-decoration:none; }
+    /* responsive tiny */
+    @media (max-width:420px){ h1{font-size:22px} .container{padding:18px} }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Free BD Number Lookup & API</h1>
+
+    <div class="lookup-row">
+      <input id="num" type="text" placeholder="01776651111" value="01776651111" />
+      <button id="lookup" class="lookup">🔍 Lookup</button>
+    </div>
+
+    <div id="result" class="result" aria-live="polite">
+      <!-- default content -->
+      <div class="row">
+        <div class="label">👤 Name</div>
+        <div id="res-name" class="value">—</div>
+      </div>
+      <div class="row">
+        <div class="label">📱 Number</div>
+        <div id="res-number" class="value">—</div>
+      </div>
+      <div class="row">
+        <div class="label">📶 Carrier</div>
+        <div id="res-carrier" class="value"><span class="carrier-badge">—</span></div>
+      </div>
+      <div class="row">
+        <div class="label">📍 Location</div>
+        <div id="res-location" class="value">—</div>
+      </div>
+      <div class="row">
+        <div class="label">☎️ Type</div>
+        <div id="res-type" class="value">Unknown</div>
+      </div>
+
+      <div class="buttons">
+        <button id="copyBtn" class="btn copy">Copy</button>
+        <button id="whBtn" class="btn wh">WhatsApp</button>
+      </div>
+
+      <div class="hint">Developed by <strong style="color:#ff7aa2">GAJARBOTOL</strong></div>
+    </div>
+
+    <div class="small">
+      API: <code id="api-info">Using mock data — replace API_URL inside script</code>
+    </div>
+  </div>
+
+<script>
+  // CONFIG: change this to your real lookup endpoint (GET ?number=)
+  const API_URL = "https://api.example.com/lookup"; // <-- replace with your API
+  const USE_REAL_API = false; // set true after changing API_URL and enabling CORS/auth
+
+  const lookupBtn = document.getElementById('lookup');
+  const numInput = document.getElementById('num');
+  const resName = document.getElementById('res-name');
+  const resNumber = document.getElementById('res-number');
+  const resCarrier = document.getElementById('res-carrier');
+  const resLocation = document.getElementById('res-location');
+  const resType = document.getElementById('res-type');
+  const apiInfo = document.getElementById('api-info');
+
+  if (!USE_REAL_API) apiInfo.textContent = "Using mock data — open script to set API_URL and toggle USE_REAL_API";
+  else apiInfo.textContent = "Using: " + API_URL;
+
+  lookupBtn.addEventListener('click', doLookup);
+  numInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') doLookup(); });
+
+  async function doLookup(){
+    const number = (numInput.value||'').trim();
+    if(!number){ alert('Enter phone number'); return; }
+
+    // show loading state
+    resName.textContent = 'Loading...'; resNumber.textContent = '—';
+    resCarrier.innerHTML = '—'; resLocation.textContent = '—'; resType.textContent = '—';
+
+    try{
+      let data;
+      if(USE_REAL_API){
+        const res = await fetch(API_URL + '?number=' + encodeURIComponent(number));
+        if(!res.ok) throw new Error('API error ' + res.status);
+        data = await res.json();
+      } else {
+        // MOCK response (replace with real API)
+        await new Promise(r=>setTimeout(r, 700)); // simulate latency
+        data = {
+          name: "মাইরুল টালি অফিস Fn",
+          number: number,
+          carrier: "Grameenphone (017)",
+          location: "Bangladesh",
+          type: "Mobile"
+        };
+      }
+
+      // adapt to different API shapes:
+      const name = data.name || data.owner || "Unknown";
+      const carrier = data.carrier || (data.network && data.network.name) || "Unknown";
+      const location = data.location || data.country || "Unknown";
+      const type = data.type || data.phone_type || "Unknown";
+
+      resName.textContent = name;
+      resNumber.textContent = number;
+      resCarrier.innerHTML = `<span class="carrier-badge">${carrier}</span>`;
+      resLocation.textContent = location;
+      resType.textContent = type;
+
+    }catch(err){
+      console.error(err);
+      resName.textContent = 'Error';
+      resNumber.textContent = number;
+      resCarrier.textContent = '—';
+      resLocation.textContent = '—';
+      resType.textContent = '—';
+      alert('Lookup failed: ' + (err.message || err));
+    }
+  }
+
+  // copy & whatsapp
+  document.getElementById('copyBtn').addEventListener('click', async ()=>{
+    const text = `${resName.textContent}\n${resNumber.textContent}\nCarrier: ${resCarrier.innerText}\nLocation: ${resLocation.textContent}`;
+    try{
+      await navigator.clipboard.writeText(text);
+      alert('Copied to clipboard');
+    }catch(e){
+      prompt('Copy this:', text);
+    }
+  });
+
+  document.getElementById('whBtn').addEventListener('click', ()=>{
+    const phone = resNumber.textContent.replace(/\D/g,'');
+    if(!phone || phone === '—'){ alert('No number to open'); return; }
+    const msg = encodeURIComponent(`Hello, I checked this number: ${resNumber.textContent}\nName: ${resName.textContent}`);
+    const waUrl = `https://wa.me/${phone}?text=${msg}`;
+    window.open(waUrl, '_blank');
+  });
+
+  // initial auto lookup (optional)
+  // doLookup();
+
+</script>
+</body>
+</html>
